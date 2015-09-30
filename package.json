@@ -1,0 +1,12 @@
+{
+  "name": "loader",
+  "version": "0.0.1",
+  "description": "Framework for load and end-to-end testing of ActiveStack",
+  "author": "Jonathan Samples<jonnysamps@gmail.com>",
+  "dependencies": {
+    "node-uuid": "^1.4.3",
+    "q":"1.4.1",
+    "socket.io-client":"0.9.17"
+  },
+  "engine": "node 4.1.1"
+}
