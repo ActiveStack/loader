@@ -24,7 +24,7 @@ LoaderForeman.prototype.run = function(){
             if(!this.startWorkerIfNeeded()) break;
         }
     } else {
-        ProfileContainer.run(process.env['LOADER_PROFILE']);
+        ProfileContainer.run(process.env['LOADER_PROFILE'], this.config);
     }
 };
 

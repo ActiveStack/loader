@@ -52,11 +52,16 @@ module.exports = {
 
 ```
 
+
 LoaderClient
 ------------
 
 An instance of LoaderClient will be passed to your profile's `run` method.  It will allow you to interact with the AS
 backend.
+
+### LoaderClient::constructor(String gatewayEndpoint)
+
+Returns an instance of LoaderClient that is configured to connect to `gatewayEndpoint`
 
 ### LoaderClient::connect() => Promise
 

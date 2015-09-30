@@ -14,7 +14,7 @@ var fs = require('fs'),
 class ProfileContainer{
     static run(profilePath, config){
         // Create the client for the script to use
-        var client = new LoaderClient('http://localhost:8080');
+        var client = new LoaderClient(config.gatewayEndpoint);
 
         try{
             // Load the profile
