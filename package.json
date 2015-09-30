@@ -1,5 +1,5 @@
 {
-  "name": "loader",
+  "name": "activestack-loader",
   "version": "0.0.1",
   "description": "Framework for load and end-to-end testing of ActiveStack",
   "author": "Jonathan Samples<jonnysamps@gmail.com>",
@@ -8,5 +8,6 @@
     "q":"1.4.1",
     "socket.io-client":"0.9.17"
   },
+  "main": "loader.js",
   "engine": "node 4.1.1"
 }
