@@ -12,40 +12,64 @@ var fs = require('fs'),
  * @constructor
  */
 class ProfileContainer{
-    static run(profilePath, config){
-        // Create the client for the script to use
-        var client = new LoaderClient(config.gatewayEndpoint);
+    constructor(profilePath, config){
+        this.profilePath = profilePath;
+        this.config = config;
+        this.start_time = null;
+        this.end_time = null;
+    }
 
+    run(){
+        // Create the client for the script to use
+        var client = new LoaderClient(this.config.gatewayEndpoint);
         try{
             // Load the profile
             var profile;
-            if(path.isAbsolute(profilePath))
-                profile = require(profilePath);
+            if(path.isAbsolute(this.profilePath))
+                profile = require(this.profilePath);
             else
-                profile = require(path.resolve(process.cwd(), profilePath));
+                profile = require(path.resolve(process.cwd(), this.profilePath));
 
             if(!profile.run)
-                ProfileContainer.handleError('no run method on profile: '+profilePath);
+                this.handleError('no run method on profile: '+this.profilePath);
 
+            this.start_time = new Date().getTime();
             var promise = profile.run(client);
 
             if(!promise)
-                ProfileContainer.handleError('No promise returned by profile: '+profilePath);
+                this.handleError('No promise returned by profile: '+this.profilePath);
 
-            promise.then(() => {
-                process.send({stats: client.stats})
-                process.exit();
-            });
+            promise.timeout(10000)
+                .then(() => {
+                    process.send({stats: client.stats.stats, time: this.time})
+                })
+                .fail((err) => {
+                    console.log("Fail!:"+err);
+                    this.handleError(err);
+                })
+                .done(() => {
+                    process.exit();
+                })
 
         }catch(e){
-            ProfileContainer.handleError(e.message);
+            this.handleError(e.message);
         }
 
     }
 
-    static handleError(message){
-        process.send({error: message})
+    handleError(message){
+        process.send({error: message, time: this.time})
         process.exit();
+    }
+
+    get time(){
+        var result = 0;
+        if(!this.end_time)
+            this.end_time = new Date().getTime();
+        if(this.start_time)
+            result = this.end_time-this.start_time
+
+        return result;
     }
 }
 

@@ -5,8 +5,9 @@
   "author": "Jonathan Samples<jonnysamps@gmail.com>",
   "dependencies": {
     "node-uuid": "^1.4.3",
-    "q":"1.4.1",
-    "socket.io-client":"0.9.17"
+    "q": "1.4.1",
+    "socket.io-client": "0.9.17",
+    "sprintf": "^0.1.5"
   },
   "main": "loader.js",
   "engine": "node 4.1.1"

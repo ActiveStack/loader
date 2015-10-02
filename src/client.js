@@ -4,7 +4,8 @@ var io = require('socket.io-client'),
     Q = require('q'),
     EventEmitter = require('events').EventEmitter,
     util = require('util'),
-    uuid = require('node-uuid');
+    uuid = require('node-uuid'),
+    EventCounter = require('./event_counter');
 
 /**
  * This class should only have a single instance per process... it is not enforced but it will not work properly
@@ -20,7 +21,7 @@ class LoaderClient extends EventEmitter{
         this.connected = false;
         this.session = null;
         this.userToken = null;
-        this.stats = {};
+        this.stats = new EventCounter();
 
         this._connectDeferred = null;
         this._loginDeferred = null;
@@ -46,28 +47,29 @@ class LoaderClient extends EventEmitter{
      * @returns {*|promise}
      */
     loginAnonymously(){
-        this._loginDeferred = Q.defer();
-
-        // Wait for an out of band push from gateway to resolve
-        this.on('com.percero.agents.sync.vo.ConnectResponse', () => this._loginDeferred.resolve(this.userToken) );
-
         // Push the authentication request
         var request = {
             cn: 'com.percero.agents.auth.vo.AuthenticationRequest',
             authProvider: 'anonymous'
         };
 
-        this._sendMessage('authenticate', request)
-            .then((response) => {
-                var userToken = response.result;
-                // Save the userToken
-                if(userToken)
-                    this.userToken = userToken;
-                else
-                    this._loginDeferred.resolve();
-            });
+        return this._doLogin(request);
+    }
 
-        return this._loginDeferred.promise;
+    /**
+     * Will do username password authentication
+     * @param username
+     * @param password
+     * @param providerId
+     */
+    loginUserPass(username, password, providerId){
+        var request = {
+            cn: "com.percero.agents.auth.vo.AuthenticationRequest",
+            authProvider: providerId,
+            credential: username+":"+password
+        };
+
+        return this._doLogin(request);
     }
 
     /**
@@ -80,6 +82,39 @@ class LoaderClient extends EventEmitter{
             theObject: example
         };
         return this._sendMessage('findByExample', message);
+    }
+
+    /**
+     * Finds an object by its ID
+     * @param className
+     * @param ID
+     * @returns {*|promise}
+     */
+    findById(className, ID){
+        var message = {
+            cn: 'com.percero.agents.sync.vo.FindByIdRequest',
+            theClassName: className,
+            theClassId: ID
+        };
+        return this._sendMessage('findById', message);
+    }
+
+    _doLogin(request){
+        this._loginDeferred = Q.defer();
+        // Wait for an out of band push from gateway to resolve
+        this.on('com.percero.agents.sync.vo.ConnectResponse', () => this._loginDeferred.resolve(this.userToken) );
+
+        this._sendMessage('authenticate', request)
+            .then((response)=>{
+            var userToken = response.result;
+            // Save the userToken
+            if(userToken)
+                this.userToken = userToken;
+            else
+                this._loginDeferred.resolve();
+        });
+
+        return this._loginDeferred.promise;
     }
 
     /**
@@ -172,17 +207,11 @@ class LoaderClient extends EventEmitter{
      * @param endTime   - optional
      */
     _addStat(kind, startTime, endTime){
-        if(!this.stats[kind]){
-            this.stats[kind] = {
-                count: 0,
-                waitTime: 0
-            }
-        }
-
-        this.stats[kind].count++;
         // Not all stats will have a wait time
         if(startTime && endTime)
-            this.stats[kind].waitTime += endTime.getTime() - startTime.getTime();
+            this.stats.addEvent(kind, endTime.getTime() - startTime.getTime());
+        else
+            this.stats.addEvent(kind, 0);
     }
 }
 
