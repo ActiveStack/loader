@@ -39,11 +39,10 @@ class ProfileContainer{
             if(!promise)
                 this.handleError('No promise returned by profile: '+this.profilePath);
 
-            promise.timeout(10000)
+            promise.timeout(30000)
                 .then(() => {
                     process.send({stats: client.stats.stats, time: this.time})
-                })
-                .fail((err) => {
+                },(err) => {
                     console.log("Fail!:"+err);
                     this.handleError(err);
                 })
