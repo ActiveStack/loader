@@ -56,9 +56,12 @@ class LoaderForeman {
     };
 
     _printHeader(){
-        var header = fs.readFileSync(__dirname+'/../resources/header.txt').toString();
+        var header = "= Activestack Loader =====================================================================";
+        if(!this.config.compact_output) {
+            header = fs.readFileSync(__dirname + '/../resources/header.txt').toString();
+            header += "\n";
+        }
         console.log(header);
-        console.log();
     }
 
     _printProgress(){
@@ -150,10 +153,9 @@ class LoaderForeman {
         if(message.error){
             console.error(message.error);
             this.progress.profileError(worker.profile.name, message.time);
-            return;
         }
-
-        this.progress.profileComplete(worker.profile.name, message.time);
+        else
+            this.progress.profileComplete(worker.profile.name, message.time);
 
         for(var key in message.stats){
             if(!this.stats[key])

@@ -102,6 +102,14 @@ class LoaderClient extends EventEmitter{
         return this._sendMessage('findById', message);
     }
 
+    findAllById(cnpArray){
+        var promises = [];
+        for(var cnp of cnpArray){
+            promises.push(this.findById(cnp.className, cnp.ID));
+        }
+        return Q.all(promises);
+    };
+
     _doLogin(request){
         this._loginDeferred = Q.defer();
         // Wait for an out of band push from gateway to resolve

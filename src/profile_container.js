@@ -17,11 +17,11 @@ class ProfileContainer{
         this.config = config;
         this.start_time = null;
         this.end_time = null;
+        this.client = new LoaderClient(this.config.gatewayEndpoint);
     }
 
     run(){
         // Create the client for the script to use
-        var client = new LoaderClient(this.config.gatewayEndpoint);
         try{
             // Load the profile
             var profile;
@@ -34,14 +34,14 @@ class ProfileContainer{
                 this.handleError('no run method on profile: '+this.profilePath);
 
             this.start_time = new Date().getTime();
-            var promise = profile.run(client);
+            var promise = profile.run(this.client);
 
             if(!promise)
                 this.handleError('No promise returned by profile: '+this.profilePath);
 
-            promise.timeout(30000)
+            promise.timeout(60000)
                 .then(() => {
-                    process.send({stats: client.stats.stats, time: this.time})
+                    process.send({stats: this.client.stats.stats, time: this.time});
                 },(err) => {
                     console.log("Fail!:"+err);
                     this.handleError(err);
@@ -57,7 +57,7 @@ class ProfileContainer{
     }
 
     handleError(message){
-        process.send({error: message, time: this.time})
+        process.send({error: message, stats: this.client.stats.stats, time: this.time})
         process.exit();
     }
 
