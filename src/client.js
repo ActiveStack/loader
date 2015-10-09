@@ -34,7 +34,8 @@ class LoaderClient extends EventEmitter{
      */
     connect(){
         this._socket = io(this.endpoint, {
-                transports: ['websocket']
+                transports: ['websocket'],
+                secure: true
             }
         );
         this._socket.on('connect', this._onConnected.bind(this));
@@ -84,7 +85,7 @@ class LoaderClient extends EventEmitter{
             cn: 'com.percero.agents.sync.vo.FindByExampleRequest',
             theObject: example
         };
-        return this._sendMessage('findByExample', message);
+        return this._sendMessage('findByExample', message, this._getShortClassName(example.cn));
     }
 
     /**
@@ -99,16 +100,26 @@ class LoaderClient extends EventEmitter{
             theClassName: className,
             theClassId: ID
         };
-        return this._sendMessage('findById', message);
+        return this._sendMessage('findById', message, this._getShortClassName(className));
     }
 
     findAllById(cnpArray){
         var promises = [];
         for(var cnp of cnpArray){
-            promises.push(this.findById(cnp.className, cnp.ID));
+            promises.push(this.findById(cnp.className, cnp.ID, cnp.className));
         }
         return Q.all(promises);
     };
+
+    /**
+     * Helper function to make reporting nicer
+     * @param fullClassName
+     * @returns {XML|void|string|*}
+     * @private
+     */
+    _getShortClassName(fullClassName){
+        return fullClassName.replace(/.*\.(.*)/i,"$1");
+    }
 
     _doLogin(request){
         this._loginDeferred = Q.defer();
@@ -184,10 +195,11 @@ class LoaderClient extends EventEmitter{
      * Sends a message to the gateway
      * @param type
      * @param message
+     * @param meta - optional data to be appended to stats
      * @returns {*|promise}
      * @private
      */
-    _sendMessage(type, message){
+    _sendMessage(type, message, meta){
         var deferred = Q.defer();
         var startTime = new Date();
 
@@ -202,12 +214,12 @@ class LoaderClient extends EventEmitter{
         // Add a then here to track the stats
         deferred.promise.then((response) => {
             var endTime = new Date();
-            this._addStat(response.cn, startTime, endTime);
+            this._addStat(this._getShortClassName(response.cn)+(meta?"("+meta+")":''), startTime, endTime);
             return response; // Return the response so the next then gets the response too
         });
 
         this._socket.emit(type, message);
-        this._addStat(message.cn);
+        this._addStat(this._getShortClassName(message.cn)+(meta?"("+meta+")":''));
         return deferred.promise;
     }
 
