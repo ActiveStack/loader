@@ -33,10 +33,11 @@ class LoaderClient extends EventEmitter{
      * @returns {*|promise}
      */
     connect(){
-        this._socket = io(this.endpoint, {
-                transports: ['websocket'],
-                secure: true
-            }
+        this._socket = io.connect(this.endpoint
+            //{
+            //    transports: ['websocket'],
+            //    secure: true
+            //}
         );
         this._socket.on('connect', this._onConnected.bind(this));
         this._socket.on('disconnect', this._onDisconnected.bind(this));
